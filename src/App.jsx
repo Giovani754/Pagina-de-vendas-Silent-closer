@@ -87,8 +87,8 @@ const BotaoCTA = ({ soTexto = false, compact = false }) => (
       : 'text-[10px] sm:text-[11px] tracking-[0.06em] sm:tracking-[0.08em] px-6 sm:px-12 py-[15px] sm:py-[17px]'
       }`}>
     {soTexto
-      ? 'ATIVAR CONTROLE AGORA'
-      : <><span className="sm:hidden">ATIVAR AGORA — R$97,90</span><span className="hidden sm:inline">ATIVAR CONTROLE AGORA — R$97,90</span></>
+      ? 'ATIVAR MEU AGENTE DE IA AGORA'
+      : <><span className="sm:hidden">ATIVAR MEU AGENTE DE IA AGORA</span><span className="hidden sm:inline">ATIVAR MEU AGENTE DE IA AGORA — R$97,90</span></>
     }
     <ArrowRight size={compact ? 11 : 13} strokeWidth={2} />
   </a>
@@ -314,11 +314,6 @@ export default function App() {
   useReveal()
   const { show, heroRef } = useStickyBar()
 
-  // Meta Pixel: ViewContent on page load
-  useEffect(() => {
-    if (window.fbq) window.fbq('track', 'ViewContent')
-  }, [])
-
   return (
     <div className="relative min-h-screen bg-[#0A0A0A] text-[#F2F2F2]">
 
@@ -346,36 +341,12 @@ export default function App() {
           <div className="lg:col-span-3 rv">
             <Rotulo>Arquitetura de decisão para vendas high ticket</Rotulo>
 
-            <h1 className="text-white font-extrabold tracking-[-0.03em] leading-[1.06] text-[1.7rem] sm:text-[2.4rem] md:text-[3.2rem] lg:text-[3.6rem] mb-5 sm:mb-6">
-              Toda venda perdida
-              <br />
-              <span className="text-white/15">
-                tinha uma resposta melhor.
-              </span>
+            <h1 className="text-white font-extrabold tracking-[-0.03em] leading-[1.06] text-[1.5rem] sm:text-[2rem] md:text-[2.6rem] lg:text-[3rem] mb-5 sm:mb-6">
+              PARE DE PERDER COMISSÕES DE R$&nbsp;10.000 POR NÃO SABER O QUE RESPONDER NO WHATSAPP.
             </h1>
 
-            <p className="text-[#C9CED8] text-[14px] sm:text-[15px] md:text-[16px] leading-[1.8] sm:leading-[1.85] max-w-[440px] mb-4">
-              E quase sempre você abriu a boca antes de diagnosticar.
-            </p>
-
-            <div className="text-[#9AA3B2] text-[12px] sm:text-[13px] mb-6 sm:mb-8 max-w-[420px] leading-[1.8] sm:leading-[1.85] space-y-1">
-              <p>Você não perde no "não".</p>
-              <p>Você perde no "vou pensar".</p>
-              <p>Você perde quando improvisa.</p>
-              <p>Quando se justifica.</p>
-              <p>Quando abre desconto para aliviar tensão.</p>
-            </div>
-
-            <p className="text-[#C9CED8] text-[13px] sm:text-[14px] mb-5 sm:mb-6 max-w-[420px] leading-relaxed">
-              Isso não é falta de esforço.<br />
-              É falta de estrutura.
-            </p>
-
-            <p className="text-[#9AA3B2] text-[12px] sm:text-[13px] mb-6 sm:mb-8 max-w-[420px] leading-relaxed">
-              O Silent Closer™ é um sistema que separa desculpa de resistência real —
-              e te entrega exatamente o que dizer, com postura e critério.
-              <br /><br />
-              Sem pressão. Sem script robótico. Sem virar commodity.
+            <p className="text-[#C9CED8] text-[14px] sm:text-[15px] md:text-[16px] leading-[1.8] sm:leading-[1.85] max-w-[480px] mb-6 sm:mb-8">
+              O Silent Closer™ é o seu Arquiteto de Decisão pessoal. Uma Inteligência Artificial que analisa as objeções do seu cliente em segundos e te entrega a saída estratégica para fechar a venda. Sem desconto, sem improviso e sem correr atrás.
             </p>
 
             <ul className="space-y-2 mb-4">
@@ -433,7 +404,7 @@ export default function App() {
 
               <a href={CHECKOUT_URL} onClick={trackCheckout}
                 className="block w-full text-center text-[10px] font-semibold tracking-[0.1em] uppercase py-3.5 sm:py-4 bg-[#F2F2F2] text-[#0A0A0A] hover:bg-white transition-colors active:scale-[0.98]">
-                ATIVAR CONTROLE AGORA →
+                ATIVAR MEU AGENTE DE IA AGORA →
               </a>
               <p className="text-[#9AA3B2] text-[9px] text-center mt-3 tracking-wide leading-relaxed">
                 Acesso imediato após confirmação • Pagamento único • Acesso vitalício
@@ -444,6 +415,31 @@ export default function App() {
       </section>
 
       <Hr />
+
+      {/* ══════════════════════════════════════
+          PROVA OPERACIONAL — GALERIA (logo após Hero)
+         ══════════════════════════════════════ */}
+      <section className="max-w-[960px] mx-auto px-4 sm:px-6 md:px-8 py-14 sm:py-20 md:py-28">
+        <div className="rv mb-10">
+          <Rotulo>Prova operacional</Rotulo>
+          <h2 className="text-white font-bold tracking-[-0.02em] text-[1.3rem] sm:text-[1.5rem] md:text-[1.9rem] leading-[1.15] mb-3">
+            O Arquiteto em ação
+          </h2>
+          <p className="text-[#9AA3B2] text-[13px] max-w-md leading-relaxed">
+            Seis situações reais. Um padrão: critério, postura e controle.
+          </p>
+        </div>
+
+        <ProvaGaleria />
+
+        {/* CTA após prova */}
+        <div className="rv text-center mt-10 sm:mt-14" style={{ transitionDelay: '0.15s' }}>
+          <BotaoCTA soTexto />
+        </div>
+      </section>
+
+      <Hr />
+
 
       {/* ══════════════════════════════════════
           2 · O PROBLEMA REAL
@@ -715,29 +711,7 @@ export default function App() {
 
       <Hr />
 
-      {/* ══════════════════════════════════════
-          8 · PROVA OPERACIONAL — GALERIA
-         ══════════════════════════════════════ */}
-      <section className="max-w-[960px] mx-auto px-4 sm:px-6 md:px-8 py-14 sm:py-20 md:py-28">
-        <div className="rv mb-10">
-          <Rotulo>Prova operacional</Rotulo>
-          <h2 className="text-white font-bold tracking-[-0.02em] text-[1.3rem] sm:text-[1.5rem] md:text-[1.9rem] leading-[1.15] mb-3">
-            O Arquiteto em ação
-          </h2>
-          <p className="text-[#9AA3B2] text-[13px] max-w-md leading-relaxed">
-            Seis situações reais. Um padrão: critério, postura e controle.
-          </p>
-        </div>
 
-        <ProvaGaleria />
-
-        {/* CTA 2 de 3 */}
-        <div className="rv text-center mt-10 sm:mt-14" style={{ transitionDelay: '0.15s' }}>
-          <BotaoCTA soTexto />
-        </div>
-      </section>
-
-      <Hr />
 
       {/* ══════════════════════════════════════
           9 · ROI EXPLÍCITO
