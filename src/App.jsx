@@ -55,10 +55,32 @@ function useStickyBar() {
 
 const CHECKOUT_URL = 'https://pay.cakto.com.br/qusyvox_784416'
 
-function trackCheckout(e) {
-  e.preventDefault()
-  if (window.fbq) window.fbq('track', 'InitiateCheckout')
-  window.location.href = CHECKOUT_URL
+const fireInitiateCheckoutAndGo = (url) => {
+  try {
+    const eventID =
+      (typeof crypto !== 'undefined' && crypto.randomUUID)
+        ? crypto.randomUUID()
+        : `ic_${Date.now()}_${Math.floor(Math.random() * 1e6)}`
+
+    if (typeof window !== 'undefined' && typeof window.fbq === 'function') {
+      window.fbq(
+        'track',
+        'InitiateCheckout',
+        {
+          content_name: 'Silent Closer',
+          value: 97.90,
+          currency: 'BRL',
+        },
+        { eventID }
+      )
+    }
+
+    setTimeout(() => {
+      window.location.href = url
+    }, 250)
+  } catch (_) {
+    window.location.href = url
+  }
 }
 
 /* ═══════════════════════════════════════════
@@ -81,7 +103,7 @@ const Rotulo = ({ children }) => (
 )
 
 const BotaoCTA = ({ soTexto = false, compact = false }) => (
-  <a href={CHECKOUT_URL} onClick={trackCheckout}
+  <a href={CHECKOUT_URL} onClick={(e) => { e.preventDefault(); fireInitiateCheckoutAndGo(CHECKOUT_URL) }}
     className={`inline-flex items-center justify-center gap-2 bg-[#F2F2F2] text-[#0A0A0A] font-semibold uppercase hover:bg-white transition-colors active:scale-[0.98] ${compact
       ? 'text-[10px] tracking-[0.06em] px-6 py-3'
       : 'text-[10px] sm:text-[11px] tracking-[0.06em] sm:tracking-[0.08em] px-6 sm:px-12 py-[15px] sm:py-[17px]'
@@ -314,6 +336,20 @@ export default function App() {
   useReveal()
   const { show, heroRef } = useStickyBar()
 
+  // ViewContent: fire once per session (useRef guard prevents re-render duplicates)
+  const viewContentFiredRef = useRef(false)
+  useEffect(() => {
+    if (viewContentFiredRef.current) return
+    viewContentFiredRef.current = true
+    if (typeof window !== 'undefined' && typeof window.fbq === 'function') {
+      window.fbq('track', 'ViewContent', {
+        content_name: 'Silent Closer',
+        value: 97.90,
+        currency: 'BRL',
+      })
+    }
+  }, [])
+
   return (
     <div className="relative min-h-screen bg-[#0A0A0A] text-[#F2F2F2]">
 
@@ -402,7 +438,7 @@ export default function App() {
                 ))}
               </ul>
 
-              <a href={CHECKOUT_URL} onClick={trackCheckout}
+              <a href={CHECKOUT_URL} onClick={(e) => { e.preventDefault(); fireInitiateCheckoutAndGo(CHECKOUT_URL) }}
                 className="block w-full text-center text-[10px] font-semibold tracking-[0.1em] uppercase py-3.5 sm:py-4 bg-[#F2F2F2] text-[#0A0A0A] hover:bg-white transition-colors active:scale-[0.98]">
                 ATIVAR MEU AGENTE DE IA AGORA →
               </a>
