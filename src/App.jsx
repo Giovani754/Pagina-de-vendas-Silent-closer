@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react'
-import { trackInitiateCheckout, trackCustom } from './analytics/metaPixel'
 import {
   ChevronDown,
   ChevronLeft,
@@ -56,6 +55,19 @@ function useStickyBar() {
 
 const CHECKOUT_URL = 'https://pay.cakto.com.br/qusyvox_784416'
 
+function fireICAndOpen(url) {
+  try {
+    if (typeof window !== 'undefined' && typeof window.fbq === 'function') {
+      window.fbq('track', 'InitiateCheckout', { content_type: 'product' })
+      window.fbq('trackCustom', 'CTA_Click', { cta: 'checkout' })
+      console.log('[SilentCloser] IC fired')
+      setTimeout(() => window.open(url, '_blank', 'noopener,noreferrer'), 250)
+      return
+    }
+  } catch (e) { /* fallback */ }
+  window.open(url, '_blank', 'noopener,noreferrer')
+}
+
 /* ═══════════════════════════════════════════
    CORES
    Principal:   #FFFFFF
@@ -75,8 +87,9 @@ const Rotulo = ({ children }) => (
   </p>
 )
 
-const BotaoCTA = ({ soTexto = false, compact = false, onClick, onPointerDown }) => (
-  <a href={CHECKOUT_URL} target="_blank" rel="noopener noreferrer" onClick={onClick} onPointerDown={onPointerDown}
+const BotaoCTA = ({ soTexto = false, compact = false }) => (
+  <a href={CHECKOUT_URL} target="_blank" rel="noopener noreferrer"
+    onClick={(e) => { e.preventDefault(); fireICAndOpen(CHECKOUT_URL) }}
     className={`inline-flex items-center justify-center gap-2 bg-[#F2F2F2] text-[#0A0A0A] font-semibold uppercase hover:bg-white transition-colors active:scale-[0.98] ${compact
       ? 'text-[10px] tracking-[0.06em] px-6 py-3'
       : 'text-[10px] sm:text-[11px] tracking-[0.06em] sm:tracking-[0.08em] px-6 sm:px-12 py-[15px] sm:py-[17px]'
@@ -309,41 +322,13 @@ export default function App() {
   useReveal()
   const { show, heroRef } = useStickyBar()
 
-  // ── fireIC: early-fire for pointerdown fallback ──
-  const icFiredRef = useRef(false)
-  function fireIC() {
-    if (icFiredRef.current) return
-    icFiredRef.current = true
-    setTimeout(() => { icFiredRef.current = false }, 2000) // reset after 2s
-
-    if (window.__SC_CTA_CLICK__) {
-      trackCustom('CTA_Click', { button: 'checkout', product: 'Silent Closer' })
+  // ── ViewContent: 1x por carregamento ──
+  useEffect(() => {
+    if (!window.__sc_vc_sent && typeof window.fbq === 'function') {
+      window.__sc_vc_sent = true
+      window.fbq('track', 'ViewContent', { content_type: 'product' })
     }
-    trackInitiateCheckout({
-      content_type: 'product',
-      content_name: 'Silent Closer',
-      currency: 'BRL',
-      value: 97.90,
-    })
-  }
-
-  // ── handleCheckoutClick: preventDefault + delay, then navigate ──
-  function handleCheckoutClick(e) {
-    try {
-      if (e && typeof e.preventDefault === 'function') e.preventDefault()
-      fireIC()
-      setTimeout(() => {
-        window.open(CHECKOUT_URL, '_blank', 'noopener,noreferrer')
-      }, 250)
-    } catch {
-      window.open(CHECKOUT_URL, '_blank', 'noopener,noreferrer')
-    }
-  }
-
-  // ── pointerdown fallback: fires IC before click even reaches handler ──
-  function handlePointerDown() {
-    fireIC()
-  }
+  }, [])
 
   return (
     <div className="relative min-h-screen bg-[#0A0A0A] text-[#F2F2F2]">
@@ -433,7 +418,8 @@ export default function App() {
                 ))}
               </ul>
 
-              <a href={CHECKOUT_URL} target="_blank" rel="noopener noreferrer" onClick={handleCheckoutClick} onPointerDown={handlePointerDown}
+              <a href={CHECKOUT_URL} target="_blank" rel="noopener noreferrer"
+                onClick={(e) => { e.preventDefault(); fireICAndOpen(CHECKOUT_URL) }}
                 className="block w-full text-center text-[10px] font-semibold tracking-[0.1em] uppercase py-3.5 sm:py-4 bg-[#F2F2F2] text-[#0A0A0A] hover:bg-white transition-colors active:scale-[0.98]">
                 ATIVAR MEU AGENTE DE IA AGORA →
               </a>
@@ -465,7 +451,7 @@ export default function App() {
 
         {/* CTA após prova */}
         <div className="rv text-center mt-10 sm:mt-14" style={{ transitionDelay: '0.15s' }}>
-          <BotaoCTA soTexto onClick={handleCheckoutClick} onPointerDown={handlePointerDown} />
+          <BotaoCTA soTexto />
         </div>
       </section>
 
@@ -955,7 +941,7 @@ export default function App() {
 
           {/* CTA 3 de 3 */}
           <div className="mb-4">
-            <BotaoCTA onClick={handleCheckoutClick} onPointerDown={handlePointerDown} />
+            <BotaoCTA />
           </div>
           <p className="text-[#9AA3B2] text-[10px] tracking-[0.06em]">
             Acesso imediato após pagamento.
@@ -978,7 +964,7 @@ export default function App() {
             <p className="text-white text-[11px] font-semibold truncate">Silent Closer™</p>
             <p className="text-[#9AA3B2] text-[9px]">R$97,90 · Acesso vitalício</p>
           </div>
-          <BotaoCTA compact soTexto onClick={handleCheckoutClick} onPointerDown={handlePointerDown} />
+          <BotaoCTA compact soTexto />
         </div>
       </div>
     </div>
