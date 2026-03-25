@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { trackViewContent, trackInitiateCheckout } from './lib/meta'
+import { track, trackCustom, makeEventId } from './analytics/metaPixel'
 import {
   ChevronDown,
   ChevronLeft,
@@ -76,7 +76,7 @@ const Rotulo = ({ children }) => (
 )
 
 const BotaoCTA = ({ soTexto = false, compact = false, onClick }) => (
-  <a href={CHECKOUT_URL} onClick={onClick}
+  <a href={CHECKOUT_URL} target="_blank" rel="noopener noreferrer" onClick={onClick}
     className={`inline-flex items-center justify-center gap-2 bg-[#F2F2F2] text-[#0A0A0A] font-semibold uppercase hover:bg-white transition-colors active:scale-[0.98] ${compact
       ? 'text-[10px] tracking-[0.06em] px-6 py-3'
       : 'text-[10px] sm:text-[11px] tracking-[0.06em] sm:tracking-[0.08em] px-6 sm:px-12 py-[15px] sm:py-[17px]'
@@ -310,49 +310,40 @@ export default function App() {
   const { show, heroRef } = useStickyBar()
 
   // ── ViewContent: fire once per session ──
-  const didTrackVC = useRef(false)
+  const viewContentFiredRef = useRef(false)
   useEffect(() => {
-    if (didTrackVC.current) return
-    didTrackVC.current = true
-    trackViewContent({
-      content_name: 'Silent Closer',
+    if (viewContentFiredRef.current) return
+    viewContentFiredRef.current = true
+    track('ViewContent', {
       content_type: 'product',
-      value: 97.90,
+      content_name: 'Silent Closer',
       currency: 'BRL',
+      value: 97.90,
     })
   }, [])
 
-  // ── Global intercept: catch ANY checkout link click (safety net) ──
-  useEffect(() => {
-    function interceptCheckout(e) {
-      const anchor = e.target.closest?.('a[href]')
-      if (!anchor) return
-      const href = anchor.getAttribute('href')
-      if (!href || !href.includes('pay.cakto.com.br')) return
+  // ── handleCheckoutClick: IC + CTA_Click, then open in new tab ──
+  function handleCheckoutClick(e) {
+    try {
+      if (e && typeof e.preventDefault === 'function') e.preventDefault()
 
-      e.preventDefault()
-      e.stopPropagation()
+      const eventID = makeEventId('ic')
 
-      trackInitiateCheckout({
-        content_name: 'Silent Closer',
+      trackCustom('CTA_Click', { button: 'checkout', product: 'Silent Closer' }, { eventID })
+
+      track('InitiateCheckout', {
         content_type: 'product',
-        value: 97.90,
+        content_name: 'Silent Closer',
         currency: 'BRL',
-      })
+        value: 97.90,
+      }, { eventID })
 
       setTimeout(() => {
-        window.location.href = href
-      }, 400)
+        window.open(CHECKOUT_URL, '_blank', 'noopener,noreferrer')
+      }, 220)
+    } catch {
+      window.open(CHECKOUT_URL, '_blank', 'noopener,noreferrer')
     }
-
-    document.addEventListener('click', interceptCheckout, { capture: true })
-    return () => document.removeEventListener('click', interceptCheckout, { capture: true })
-  }, [])
-
-  // handleCheckoutClick kept for explicit onClick props (redundancy)
-  function handleCheckoutClick(e) {
-    // The global intercept above will handle it.
-    // This is here so React doesn't warn about missing handlers.
   }
 
   return (
@@ -443,7 +434,7 @@ export default function App() {
                 ))}
               </ul>
 
-              <a href={CHECKOUT_URL} onClick={handleCheckoutClick}
+              <a href={CHECKOUT_URL} target="_blank" rel="noopener noreferrer" onClick={handleCheckoutClick}
                 className="block w-full text-center text-[10px] font-semibold tracking-[0.1em] uppercase py-3.5 sm:py-4 bg-[#F2F2F2] text-[#0A0A0A] hover:bg-white transition-colors active:scale-[0.98]">
                 ATIVAR MEU AGENTE DE IA AGORA →
               </a>
