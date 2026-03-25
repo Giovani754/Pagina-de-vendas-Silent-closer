@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { track, trackCustom, makeEventId } from './analytics/metaPixel'
+import { trackViewContent, trackInitiateCheckout, trackCustom } from './analytics/metaPixel'
 import {
   ChevronDown,
   ChevronLeft,
@@ -314,7 +314,7 @@ export default function App() {
   useEffect(() => {
     if (viewContentFiredRef.current) return
     viewContentFiredRef.current = true
-    track('ViewContent', {
+    trackViewContent({
       content_type: 'product',
       content_name: 'Silent Closer',
       currency: 'BRL',
@@ -322,21 +322,22 @@ export default function App() {
     })
   }, [])
 
-  // ── handleCheckoutClick: IC + CTA_Click, then open in new tab ──
+  // ── handleCheckoutClick: InitiateCheckout + open new tab ──
   function handleCheckoutClick(e) {
     try {
       if (e && typeof e.preventDefault === 'function') e.preventDefault()
 
-      const eventID = makeEventId('ic')
+      // CTA_Click custom event — only if flag enabled (avoid polluting Pixel Helper)
+      if (window.__SC_CTA_CLICK__) {
+        trackCustom('CTA_Click', { button: 'checkout', product: 'Silent Closer' })
+      }
 
-      trackCustom('CTA_Click', { button: 'checkout', product: 'Silent Closer' }, { eventID })
-
-      track('InitiateCheckout', {
+      trackInitiateCheckout({
         content_type: 'product',
         content_name: 'Silent Closer',
         currency: 'BRL',
         value: 97.90,
-      }, { eventID })
+      })
 
       setTimeout(() => {
         window.open(CHECKOUT_URL, '_blank', 'noopener,noreferrer')
