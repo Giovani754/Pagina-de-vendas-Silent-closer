@@ -309,7 +309,7 @@ export default function App() {
   useReveal()
   const { show, heroRef } = useStickyBar()
 
-  // ViewContent: fire once per session (useRef guard prevents re-render duplicates)
+  // ── ViewContent: fire once per session ──
   const didTrackVC = useRef(false)
   useEffect(() => {
     if (didTrackVC.current) return
@@ -322,21 +322,37 @@ export default function App() {
     })
   }, [])
 
-  // handleCheckoutClick: dispara InitiateCheckout e redireciona
-  function handleCheckoutClick(e) {
-    try {
-      const href = e?.currentTarget?.getAttribute?.('href')
+  // ── Global intercept: catch ANY checkout link click (safety net) ──
+  useEffect(() => {
+    function interceptCheckout(e) {
+      const anchor = e.target.closest?.('a[href]')
+      if (!anchor) return
+      const href = anchor.getAttribute('href')
+      if (!href || !href.includes('pay.cakto.com.br')) return
+
+      e.preventDefault()
+      e.stopPropagation()
+
       trackInitiateCheckout({
         content_name: 'Silent Closer',
         content_type: 'product',
         value: 97.90,
         currency: 'BRL',
       })
-      if (href) {
-        e.preventDefault()
-        setTimeout(() => { window.location.href = href }, 180)
-      }
-    } catch (_) { /* não quebra navegação */ }
+
+      setTimeout(() => {
+        window.location.href = href
+      }, 400)
+    }
+
+    document.addEventListener('click', interceptCheckout, { capture: true })
+    return () => document.removeEventListener('click', interceptCheckout, { capture: true })
+  }, [])
+
+  // handleCheckoutClick kept for explicit onClick props (redundancy)
+  function handleCheckoutClick(e) {
+    // The global intercept above will handle it.
+    // This is here so React doesn't warn about missing handlers.
   }
 
   return (
