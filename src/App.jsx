@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { trackViewContent, trackInitiateCheckout, trackCustom } from './analytics/metaPixel'
+import { trackInitiateCheckout, trackCustom } from './analytics/metaPixel'
 import {
   ChevronDown,
   ChevronLeft,
@@ -75,8 +75,8 @@ const Rotulo = ({ children }) => (
   </p>
 )
 
-const BotaoCTA = ({ soTexto = false, compact = false, onClick }) => (
-  <a href={CHECKOUT_URL} target="_blank" rel="noopener noreferrer" onClick={onClick}
+const BotaoCTA = ({ soTexto = false, compact = false, onClick, onPointerDown }) => (
+  <a href={CHECKOUT_URL} target="_blank" rel="noopener noreferrer" onClick={onClick} onPointerDown={onPointerDown}
     className={`inline-flex items-center justify-center gap-2 bg-[#F2F2F2] text-[#0A0A0A] font-semibold uppercase hover:bg-white transition-colors active:scale-[0.98] ${compact
       ? 'text-[10px] tracking-[0.06em] px-6 py-3'
       : 'text-[10px] sm:text-[11px] tracking-[0.06em] sm:tracking-[0.08em] px-6 sm:px-12 py-[15px] sm:py-[17px]'
@@ -309,42 +309,40 @@ export default function App() {
   useReveal()
   const { show, heroRef } = useStickyBar()
 
-  // ── ViewContent: fire once per session ──
-  const viewContentFiredRef = useRef(false)
-  useEffect(() => {
-    if (viewContentFiredRef.current) return
-    viewContentFiredRef.current = true
-    trackViewContent({
+  // ── fireIC: early-fire for pointerdown fallback ──
+  const icFiredRef = useRef(false)
+  function fireIC() {
+    if (icFiredRef.current) return
+    icFiredRef.current = true
+    setTimeout(() => { icFiredRef.current = false }, 2000) // reset after 2s
+
+    if (window.__SC_CTA_CLICK__) {
+      trackCustom('CTA_Click', { button: 'checkout', product: 'Silent Closer' })
+    }
+    trackInitiateCheckout({
       content_type: 'product',
       content_name: 'Silent Closer',
       currency: 'BRL',
       value: 97.90,
     })
-  }, [])
+  }
 
-  // ── handleCheckoutClick: InitiateCheckout + open new tab ──
+  // ── handleCheckoutClick: preventDefault + delay, then navigate ──
   function handleCheckoutClick(e) {
     try {
       if (e && typeof e.preventDefault === 'function') e.preventDefault()
-
-      // CTA_Click custom event — only if flag enabled (avoid polluting Pixel Helper)
-      if (window.__SC_CTA_CLICK__) {
-        trackCustom('CTA_Click', { button: 'checkout', product: 'Silent Closer' })
-      }
-
-      trackInitiateCheckout({
-        content_type: 'product',
-        content_name: 'Silent Closer',
-        currency: 'BRL',
-        value: 97.90,
-      })
-
+      fireIC()
       setTimeout(() => {
         window.open(CHECKOUT_URL, '_blank', 'noopener,noreferrer')
-      }, 220)
+      }, 250)
     } catch {
       window.open(CHECKOUT_URL, '_blank', 'noopener,noreferrer')
     }
+  }
+
+  // ── pointerdown fallback: fires IC before click even reaches handler ──
+  function handlePointerDown() {
+    fireIC()
   }
 
   return (
@@ -375,7 +373,7 @@ export default function App() {
             <Rotulo>Arquitetura de decisão para vendas high ticket</Rotulo>
 
             <h1 className="text-white font-extrabold tracking-[-0.03em] leading-[1.06] text-[1.5rem] sm:text-[2rem] md:text-[2.6rem] lg:text-[3rem] mb-5 sm:mb-6">
-              PARE DE PERDER COMISSÕES DE R$&nbsp;10.000 POR NÃO SABER O QUE RESPONDER NO WHATSAPP.
+              PARE DE PERDER COMISSÕES POR NÃO SABER O QUE RESPONDER.
             </h1>
 
             <p className="text-[#C9CED8] text-[14px] sm:text-[15px] md:text-[16px] leading-[1.8] sm:leading-[1.85] max-w-[480px] mb-6 sm:mb-8">
@@ -435,7 +433,7 @@ export default function App() {
                 ))}
               </ul>
 
-              <a href={CHECKOUT_URL} target="_blank" rel="noopener noreferrer" onClick={handleCheckoutClick}
+              <a href={CHECKOUT_URL} target="_blank" rel="noopener noreferrer" onClick={handleCheckoutClick} onPointerDown={handlePointerDown}
                 className="block w-full text-center text-[10px] font-semibold tracking-[0.1em] uppercase py-3.5 sm:py-4 bg-[#F2F2F2] text-[#0A0A0A] hover:bg-white transition-colors active:scale-[0.98]">
                 ATIVAR MEU AGENTE DE IA AGORA →
               </a>
@@ -467,7 +465,7 @@ export default function App() {
 
         {/* CTA após prova */}
         <div className="rv text-center mt-10 sm:mt-14" style={{ transitionDelay: '0.15s' }}>
-          <BotaoCTA soTexto onClick={handleCheckoutClick} />
+          <BotaoCTA soTexto onClick={handleCheckoutClick} onPointerDown={handlePointerDown} />
         </div>
       </section>
 
@@ -957,7 +955,7 @@ export default function App() {
 
           {/* CTA 3 de 3 */}
           <div className="mb-4">
-            <BotaoCTA onClick={handleCheckoutClick} />
+            <BotaoCTA onClick={handleCheckoutClick} onPointerDown={handlePointerDown} />
           </div>
           <p className="text-[#9AA3B2] text-[10px] tracking-[0.06em]">
             Acesso imediato após pagamento.
@@ -980,7 +978,7 @@ export default function App() {
             <p className="text-white text-[11px] font-semibold truncate">Silent Closer™</p>
             <p className="text-[#9AA3B2] text-[9px]">R$97,90 · Acesso vitalício</p>
           </div>
-          <BotaoCTA compact soTexto onClick={handleCheckoutClick} />
+          <BotaoCTA compact soTexto onClick={handleCheckoutClick} onPointerDown={handlePointerDown} />
         </div>
       </div>
     </div>
